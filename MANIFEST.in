@@ -1,0 +1,3 @@
+include config.py
+recursive-include examples *.xml *.py
+exclude libsedna.py

@@ -1,0 +1,179 @@
+                           Sedna Python Driver 0.2
+       _________________________________________________________________
+
+
+    Use this document to build and install Sedna Python driver.
+Further in this document *Nix is shorthand for Linux, Mac OS, FreeBSD,
+Solaris and other POSIX compliant operating systems.
+
+
+CONTENTS
+==============================================================================
+
+
+    1. Software requirements
+    2. General notes
+    3. Windows installation
+    4. *Nix 32-bit installation
+    5. *Nix 64-bit installation
+    6. Installation from scratch using Sedna sources
+    7. Package structure
+    8. Support and feedback
+
+
+SOFTWARE REQUIREMENTS
+==============================================================================
+
+    Before you install Sedna Python driver, ensure that you have the
+following basic software installed:
+
+    * The driver is based on the SWIG (http://www.swig.org/) wrapper of
+      Sedna C driver, so you need to install the latest version of SWIG.
+    * C-compiler: for example Visual Studio C++ Express Edition on
+      Windows, gcc on *Nix.
+      Note! Use the same Visual Studio C compiler your Python
+      binaries distribution was compiled with. As far as we know Python 2.6
+      and higher is built with VC9 (Visual Studio 2008).
+    * Python 2.4 and higher. You also need python-dev package on some
+      *Nix operating systems.
+
+    If you will be building Sedna Python driver together with Sedna C
+    Driver from Sedna sources then you will also be needing:
+
+    * CMake build system (http://www.cmake.org/) since Sedna is configured
+      using CMake
+    * Proper Make utility to build C driver (make on *Nix; nmake on
+      Windows)
+
+GENERAL NOTES
+==============================================================================
+
+    You have two ways to build and install Sedna Python driver:
+    you can build it using Sedna binaries or you can build it from
+    scratch together with Sedna C driver (useful for 64-bit systems)
+    from Sedna sources. You can configure the process via config.py
+    file. This file contains two variables: SEDNA_BIN_PATH and
+    SEDNA_SRC_PATH. Installation script first searches in SEDNA_BIN_PATH
+    for Sedna C driver prebuilt library and relevant headers.  If all
+    is ok, then it will build Python driver using them. However, if it
+    doesn't find prebuilt Sedna C driver it will try to build it from
+    scratch using Sedna sources pointed by SEDNA_SRC_PATH. If this isn't
+    what you want then set SEDNA_SRC_PATH to an empty string. In this
+    case, if the script cannot find prebuilt Sedna C driver it will exit
+    with an error. On the other hand, if you want to skip searching of
+    prebuilt libraries and build from scratch, then set SEDNA_BIN_PATH
+    to an empty string and SEDNA_SRC_PATH to some meaningful value.
+    Platform specific sections that follow assume building from Sedna
+    binary build.
+
+    Remember, that if you want to build the driver from scratch you can
+    always build Sedna C driver manually from the source distribution
+    and then build Python driver via SEDNA_BIN_PATH.
+
+WINDOWS INSTALLATION
+==============================================================================
+
+    1. If you do not have Sedna installed on your system, download and
+       install the latest stable binary build. It is available at
+       http://modis.ispras.ru/sedna
+    2. Check that swig, python, Microsoft C compiler and linker
+       are accessible through PATH variable. Properly adjust PATH if
+       they are not. Note! Use the same Visual Studio C compiler your Python
+       binaries distribution was compiled with.
+    3. Define SEDNA_BIN_PATH variable value in config.py file:
+
+         e.g. SEDNA_BIN_PATH="C:\\sedna"
+    4. Run:
+
+         python setup.py build
+
+       to build python driver.
+    5. Run:
+
+         python setup.py install
+
+       to install python driver.
+
+
+*NIX (32-BIT) INSTALLATION
+==============================================================================
+
+    1. If you do not have Sedna installed on your system, download and
+       install the latest stable build. It is available at
+       http://modis.ispras.ru/sedna. You can install Sedna either from
+       sources or prebuilt binaries.
+    2. Ensure that Python development package is installed (if this
+       is relevant for your OS).
+    3. Define SEDNA_BIN_PATH variable value in config.py file:
+
+         e.g. SEDNA_BIN_PATH="/home/user/sedna"
+
+    4. Run:
+
+         python setup.py build
+
+       to build python driver.
+    5. Run:
+
+         sudo python setup.py install
+
+       to install python driver.
+
+*NIX (64-BIT) INSTALLATION
+==============================================================================
+
+    For now, we don't provide prebuilt 64-bit Sedna binaries. So, to
+    build Python driver on 64-bit system you must build it together
+    with Sedna C Driver from scratch. For details, see "INSTALLATION
+    FROM SCRATCH USING SEDNA SOURCES" section
+
+INSTALLATION FROM SCRATCH USING SEDNA SOURCES
+==============================================================================
+
+    1. Download and unpack the latest Sedna SOURCE distribution from
+       http://modis.ispras.ru/sedna.
+    2. Ensure that CMake and Make utilities are installed (cmake and
+       make/nmake commands are available via PATH).
+    3. Ensure that Python development package is installed (if this
+       is relevant for your OS).
+    4. Define SEDNA_SRC_PATH variable value in config.py file:
+
+         e.g. SEDNA_SRC_PATH="path-to-sedna-sources"
+
+    5. Run:
+
+         python setup.py build
+
+       to build python driver.
+    6. Run:
+
+         python setup.py install (or 'sudo python setup.py install'
+         on *Nix)
+
+       to install python driver.
+
+
+PACKAGE STRUCTURE
+==============================================================================
+
+    Sedna Python driver consists of two modules:
+
+    * libsedna.py - automatically generated warapper of the C API.
+                    It can be considered as a low level API and
+                    functionally equivalent to the C API.  Type "import
+                    libsedna" to use it.
+
+    * sedna.py    - high level wrapper of the libsedna.py.
+                    This is the preferable way of using Sedna python
+                    driver.  Type "import sedna" yo use it.
+
+
+SUPPORT AND FEEDBACK
+==============================================================================
+
+If you have problems installing this driver or just want to let us know about
+any problems in this software, please feel free to write to the Sedna discussion
+list:
+
+    https://lists.sourceforge.net/lists/listinfo/sedna-discussion
+    
