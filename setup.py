@@ -1,9 +1,9 @@
 ##############################################################################
 ## File:  setup.py
 ##
-## Copyright (C) 2010, Apache License 2.0 
+## Copyright (C) 2010, Apache License 2.0
 ## The Institute for System Programming of the Russian Academy of Sciences
-## 
+##
 ## Distutils setup scripts for building and installing Sedna Python driver.
 ## See INSTALL file for details on installation.
 ## See 'examples' folder for examples on using Sedna Python Driver.
@@ -55,7 +55,7 @@ if sys.platform == 'win32':
      cmake_generator = 'NMake Makefiles'
      lib_target = "sedna_md"
 else:
-     sedna_library = 'sedna_pic'      # *nix, static, fpic version 
+     sedna_library = 'sedna_pic'      # *nix, static, fpic version
      sedna_library_name = 'libsedna_pic.a'
      make_command = "make"
      cmake_generator = 'Unix Makefiles'
@@ -118,7 +118,7 @@ class build_ext(_build_ext):
             os.mkdir(temp_build_dir)
 
             # run cmake to configure Sedna sources
-            p = subprocess.Popen(['cmake', '-G', cmake_generator, config.SEDNA_SRC_PATH], cwd=temp_build_dir)
+            p = subprocess.Popen(['cmake', '-G', cmake_generator, '-DCMAKE_BUILD_TYPE=Release', config.SEDNA_SRC_PATH], cwd=temp_build_dir)
             p.wait()
             if p.returncode != 0:
                 grumble("error: driver configuration.", 2)
