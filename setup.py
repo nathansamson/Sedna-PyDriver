@@ -51,13 +51,11 @@ def check_for_driver_swig(src_path, bin_path):
 if sys.platform == 'win32':
      sedna_library = 'libsednamd' # Win32, static, /MD version
      sedna_library_name = 'libsednamd.lib'
-     make_command = "nmake"
      cmake_generator = 'NMake Makefiles'
      lib_target = "sedna_md"
 else:
      sedna_library = 'sedna_pic'      # *nix, static, fpic version
      sedna_library_name = 'libsedna_pic.a'
-     make_command = "make"
      cmake_generator = 'Unix Makefiles'
      lib_target = "sedna_pic"
 
@@ -80,9 +78,9 @@ if not os.path.exists(config.SEDNA_BIN_PATH) or not check_for_driver_swig(driver
 
 class build_ext(_build_ext):
     """ Extends build_ext command by building sedna driver if needed """
-
     def check_build_prereq(self):
         """" Checks if we've got everything for the driver """
+        self.make_command = ""
         if not os.path.exists(os.path.join(driver_src_path, 'CMakeLists.txt')):
             grumble("error: can't build Sedna C API library -- Sedna source directory doesn't look correct.")
             sys.exit(1)
@@ -94,11 +92,15 @@ class build_ext(_build_ext):
         else:
             log.info("Found cmake command...")
 
-        if not find_executable(make_command):
-            grumble("error: can't build Sedna C API library -- %s not found." % make_command)
+        for cmd in ['nmake', 'gmake', 'make']:
+            if find_executable(cmd):
+                self.make_command = cmd
+                log.info("Found %s command..." % cmd)
+                break
+
+        if self.make_command == "":
+            grumble("error: can't build Sedna C API library -- make command not found.")
             sys.exit(1)
-        else:
-            log.info("Found %s command..." % make_command)
 
     def run(self):
         """ This method overrides common build_ext """
@@ -124,7 +126,7 @@ class build_ext(_build_ext):
                 grumble("error: driver configuration.", 2)
 
             # run make to build sedna driver
-            p = subprocess.Popen([make_command, lib_target], cwd=temp_build_dir)
+            p = subprocess.Popen([self.make_command, lib_target], cwd=temp_build_dir)
             p.wait()
             if p.returncode != 0:
                 grumble("error: driver make error.", 3)
