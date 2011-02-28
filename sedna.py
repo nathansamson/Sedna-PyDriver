@@ -64,6 +64,7 @@ class SednaConnection:
 		"""Start a new transaction."""
 		if libsedna.SEbegin(self.sednaConnection)!= libsedna.SEDNA_BEGIN_TRANSACTION_SUCCEEDED:
 			self.__raiseException()
+		return self
 
 	def endTransaction(self,how):
 		"""Finish the transaction.
@@ -73,6 +74,7 @@ class SednaConnection:
 			raise SednaException("expecting %s or %s, not %s"%(repr('commit'),repr('rollback'),repr(how)))
 		if {'commit':libsedna.SEcommit, 'rollback':libsedna.SErollback}[how](self.sednaConnection) not in [libsedna.SEDNA_COMMIT_TRANSACTION_SUCCEEDED, libsedna.SEDNA_ROLLBACK_TRANSACTION_SUCCEEDED]:
 			self.__raiseException()
+		return self
 
 	def execute(self,query):
 		"""Execute query.
@@ -82,6 +84,7 @@ class SednaConnection:
 			query = query.encode("utf-8")
 		if libsedna.SEexecute(self.sednaConnection,query) not in [libsedna.SEDNA_QUERY_SUCCEEDED, libsedna.SEDNA_UPDATE_SUCCEEDED, libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
 			self.__raiseException()
+		return self
 	
 	def status(self):
 		"""status(self) -> string
@@ -94,6 +97,9 @@ class SednaConnection:
 
 			Get current transaction status. Either: 'active' or 'none'"""
 		return {libsedna.SEDNA_TRANSACTION_ACTIVE:'active', libsedna.SEDNA_NO_TRANSACTION:'none'} [libsedna.SEtransactionStatus(self.sednaConnection)]
+	
+	def isTransactionActive(self):
+		return True if libsedna.SEtransactionStatus(self.sednaConnection) == libsedna.SEDNA_TRANSACTION_ACTIVE else False
 	
 	def resultSequence(self,hook=None,proccessor=None,bufferSize=4096):
 		"""Retrieve result of query execution"""
