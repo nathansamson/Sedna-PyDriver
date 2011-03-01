@@ -76,6 +76,12 @@ class SednaConnection:
 			self.__raiseException()
 		return self
 
+	def commit(self):
+		return self.endTransaction('commit')
+	
+	def rollback(self):
+		return self.endTransaction('rollback')
+
 	def execute(self,query):
 		"""Execute query.
 
