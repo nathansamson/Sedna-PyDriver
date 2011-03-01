@@ -54,6 +54,7 @@ class SednaConnection:
 			self.__raiseException()
 		if libsedna.SEsetConnectionAttrInt(self.sednaConnection,libsedna.SEDNA_ATTR_AUTOCOMMIT,libsedna.SEDNA_AUTOCOMMIT_OFF) != libsedna.SEDNA_SET_ATTRIBUTE_SUCCEEDED:
 			self.__raiseException()
+		self.__modules = {}
 	
 	def close(self):
 		"""Close the connection. A closed connection cannot be used for further operations."""
@@ -82,12 +83,28 @@ class SednaConnection:
 	def rollback(self):
 		return self.endTransaction('rollback')
 
+	def installModule(self, module, replace = False):
+		qs = 'LOAD'
+		if replace: qs += ' OR REPLACE'
+		qs += ' MODULE "%s"' % module
+		return self.execute(qs)
+	
+	def removeModule(self, namespace):
+		return self.execute("DROP MODULE '%s'" % namespace)
+
 	def execute(self,query):
 		"""Execute query.
 
 			query: query to execute (string)"""
 		if isinstance(query, unicode):
 			query = query.encode("utf-8")
+		
+		imports = ""
+		for name in self.__modules:
+			imports += "import module namespace %s = '%s';\n" % (name, self.__modules[name])
+		
+		query = imports + query
+			
 		if libsedna.SEexecute(self.sednaConnection,query) not in [libsedna.SEDNA_QUERY_SUCCEEDED, libsedna.SEDNA_UPDATE_SUCCEEDED, libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
 			self.__raiseException()
 		return self
@@ -159,6 +176,18 @@ class SednaConnection:
 				self._feed_data(d, doc, collection)
 		if libsedna.SEendLoadData(self.sednaConnection) not in [libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
 			self.__raiseException()
+	
+	def loadModule(self, name, namespace):
+		if name in self.__modules:
+			raise "Module already loaded"
+		self.__modules[name] = namespace
+		return self
+	
+	def unLoadModule(self, name):
+		if name not in self.__modules:
+			raise "Module not loaded"
+		del self.__modules[name]
+		return self
 	
 	def __raiseException(self):
 		raise SednaException(libsedna.SEgetLastErrorMsg(self.sednaConnection))
