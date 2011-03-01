@@ -92,19 +92,24 @@ class SednaConnection:
 	def removeModule(self, namespace):
 		return self.execute("DROP MODULE '%s'" % namespace)
 
-	def execute(self,query):
+	def execute(self,query,**kwargs):
 		"""Execute query.
 
 			query: query to execute (string)"""
 		if isinstance(query, unicode):
 			query = query.encode("utf-8")
 		
+		for arg in kwargs:
+			kwargs[arg] = kwargs[arg].encode("utf-8").replace('&', '&amp;').replace('"', '&quot;').\
+			                                          replace("'", "&apos;").replace('<', '&lt;').\
+			                                          replace('>', '&gt;')
+		
 		imports = ""
 		for name in self.__modules:
 			imports += "import module namespace %s = '%s';\n" % (name, self.__modules[name])
 		
-		query = imports + query
-			
+		query = imports + (query % kwargs)
+
 		if libsedna.SEexecute(self.sednaConnection,query) not in [libsedna.SEDNA_QUERY_SUCCEEDED, libsedna.SEDNA_UPDATE_SUCCEEDED, libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
 			self.__raiseException()
 		return self
