@@ -182,6 +182,9 @@ class SednaConnection:
 		if libsedna.SEendLoadData(self.sednaConnection) not in [libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
 			self.__raiseException()
 	
+	def dropDocument(self, doc):
+		return self.execute("""DROP DOCUMENT "%(doc)s" """ % {'doc': doc})
+	
 	def loadModule(self, name, namespace):
 		if name in self.__modules:
 			raise "Module already loaded"
