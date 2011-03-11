@@ -114,6 +114,18 @@ class SednaConnection:
 			self.__raiseException()
 		return self
 	
+	def update(self, query, begin_transaction = True, commit_transaction = True,
+	                 close_connection = False, **kwargs):
+		if begin_transaction:
+			self.beginTransaction()
+		self.execute(query, **kwargs)
+		if commit_transaction:
+			self.commit()
+			if close_connection:
+				self.close()
+				return None
+		return self
+	
 	def status(self):
 		"""status(self) -> string
 
