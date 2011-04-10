@@ -199,13 +199,13 @@ class SednaConnection:
 	
 	def loadModule(self, name, namespace):
 		if name in self.__modules:
-			raise "Module already loaded"
+			raise SednaException("Module already loaded")
 		self.__modules[name] = namespace
 		return self
 	
 	def unLoadModule(self, name):
 		if name not in self.__modules:
-			raise "Module not loaded"
+			raise SednaException("Module not loaded")
 		del self.__modules[name]
 		return self
 	
