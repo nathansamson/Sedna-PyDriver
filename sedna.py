@@ -18,7 +18,7 @@ and query execution facilities.
 SednaException  - encapsulates Sedna errors. 
 """
 
-
+import uuid
 import libsedna
 import cStringIO
 
@@ -55,6 +55,7 @@ class SednaConnection:
 		if libsedna.SEsetConnectionAttrInt(self.sednaConnection,libsedna.SEDNA_ATTR_AUTOCOMMIT,libsedna.SEDNA_AUTOCOMMIT_OFF) != libsedna.SEDNA_SET_ATTRIBUTE_SUCCEEDED:
 			self.__raiseException()
 		self.__modules = {}
+		self.__temp_documents = []
 	
 	def close(self):
 		"""Close the connection. A closed connection cannot be used for further operations."""
@@ -71,6 +72,9 @@ class SednaConnection:
 		"""Finish the transaction.
 
 			how: either 'commit' or 'rollback'"""
+		for doc in self.__temp_documents:
+			self.dropDocument(doc)
+		self.__temp_documents = []
 		if how not in ['commit','rollback']:
 			raise SednaException("expecting %s or %s, not %s"%(repr('commit'),repr('rollback'),repr(how)))
 		if {'commit':libsedna.SEcommit, 'rollback':libsedna.SErollback}[how](self.sednaConnection) not in [libsedna.SEDNA_COMMIT_TRANSACTION_SUCCEEDED, libsedna.SEDNA_ROLLBACK_TRANSACTION_SUCCEEDED]:
@@ -168,13 +172,44 @@ class SednaConnection:
 	def _feed_data(self, data, doc, collection):
 		if libsedna.SEloadData(self.sednaConnection, data, len(data), doc, collection) not in [libsedna.SEDNA_DATA_CHUNK_LOADED]:
 			self.__raiseException()
-		
+	
+	def loadTemporaryDocument(self, data):
+		"""Load tempory document. The document will be dropped at the end of
+			the transaction.
+
+			data: either file object, or string with XML to load
+			
+			Returns the (unique) name of the document.
+			"""
+		return self._loadDocument(data)
+	
 	def loadDocument(self, data, doc, collection=None):
 		"""Load document.
 
 			data: either file object, or string with XML to load
-			doc: database document name data is loaded as
-			collection: collection name data is loaded into"""
+			doc: database document name data is loaded as.
+			collection: collection name data is loaded into
+
+			"""
+		self._loadDocument(data, doc, collection)
+		
+	def _loadDocument(self, data, doc=None, collection=None):
+		"""Load document.
+
+			data: either file object, or string with XML to load
+			doc: database document name data is loaded as, if not given a temporary document with a random name will be created.
+			     if doc is not given the document will be dropped when the transaction ends (commit or rollback).
+			collection: collection name data is loaded into
+			
+			Returns the name of the document.
+			"""
+		temp = False
+		if doc == None:
+			temp = True
+			doc = str(uuid.uuid4().int)
+			while doc in self.__temp_documents:
+				doc = str(uuid.uuid4().int)
+			self.__temp_documents.append(doc)
 		if isinstance(data,file):
 			while True:
 				d = data.read(4096)
@@ -192,7 +227,10 @@ class SednaConnection:
 					d = d.encode("utf-8")
 				self._feed_data(d, doc, collection)
 		if libsedna.SEendLoadData(self.sednaConnection) not in [libsedna.SEDNA_BULK_LOAD_SUCCEEDED]:
+			if temp:
+				del self.__temp_documents[self.__temp_documents.index(doc)]
 			self.__raiseException()
+		return doc
 	
 	def dropDocument(self, doc):
 		return self.execute("""DROP DOCUMENT "%(doc)s" """ % {'doc': doc})
